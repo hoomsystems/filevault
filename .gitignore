@@ -1,0 +1,17 @@
+# dependencies
+/node_modules
+
+# environment
+.env
+.env.local
+.env.development
+.env.production
+
+# Local Netlify folder
+.netlify
+
+# Next.js
+.next/
+
+# DS_Store
+.DS_Store
