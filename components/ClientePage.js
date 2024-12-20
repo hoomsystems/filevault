@@ -9,6 +9,8 @@ import { cn } from '../lib/utils';
 import ClientAccess from './ClientAccess';
 import ClientChat from './ClientChat';
 import { ShareDocumentsDialog } from './ShareDocumentsDialog';
+import { Textarea } from "./ui/textarea"
+import { debounce } from "lodash"
 
 function ClientePage({ clientId, onBack, isClientView = false, token }) {
   const [cliente, setCliente] = useState(null);
@@ -70,7 +72,7 @@ function ClientePage({ clientId, onBack, isClientView = false, token }) {
         // Cargar documentos en una consulta separada
         const { data: docList, error: docError } = await supabase
           .from('documentos_cliente')
-          .select('*')
+          .select('*, notas')
           .eq('cliente_id', clientId)
           .order('orden');
 
@@ -598,6 +600,20 @@ function ClientePage({ clientId, onBack, isClientView = false, token }) {
     return allApproved;
   };
 
+  const handleNotesChange = debounce(async (documentId, notes) => {
+    try {
+      const { error } = await supabase
+        .from('documentos_cliente')
+        .update({ notas: notes })
+        .eq('id', documentId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error al guardar notas:', error);
+      toast.error('Error al guardar las notas');
+    }
+  }, 1000);
+
   if (!userRole && !isClientView) {
     console.log('No hay rol de usuario:', { userRole, isClientView });
     return (
@@ -861,6 +877,18 @@ function ClientePage({ clientId, onBack, isClientView = false, token }) {
                         </Button>
                       )}
                     </div>
+                  </div>
+
+                  <div className="mt-4 border-t pt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Notas del documento
+                    </label>
+                    <Textarea
+                      placeholder="Agregar notas sobre este documento..."
+                      className="min-h-[100px]"
+                      defaultValue={doc.notas || ''}
+                      onChange={(e) => handleNotesChange(doc.id, e.target.value)}
+                    />
                   </div>
                 </CardContent>
               </Card>
