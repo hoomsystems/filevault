@@ -119,6 +119,7 @@ function Clientes() {
       const newClientData = {
         ...newClient,
         created_by: user.id,
+        user_id: user.id,
         organization_id: userRole.organization_id
       };
 
