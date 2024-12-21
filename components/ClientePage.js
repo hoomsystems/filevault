@@ -257,6 +257,13 @@ function ClientePage({ clientId, onBack, isClientView = false, token }) {
 
   const handleFileUpload = async (documentIndex, file) => {
     try {
+      // Verificar tamaño del archivo (50MB = 50 * 1024 * 1024 bytes)
+      const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB en bytes
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`El archivo excede el límite de 50MB`);
+        return;
+      }
+
       const document = documentList[documentIndex];
       const hasApprovedFiles = document.archivos?.some(a => a.estado === 'aprobado');
       
@@ -858,10 +865,13 @@ function ClientePage({ clientId, onBack, isClientView = false, token }) {
                       />
                       <label
                         htmlFor={`file-${doc.id}`}
-                        className="cursor-pointer inline-flex items-center px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 text-sm whitespace-nowrap"
+                        className="cursor-pointer inline-flex items-center px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 text-sm whitespace-nowrap group relative"
                       >
                         <FileUp className="h-4 w-4 mr-2" />
                         Subir Archivo
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap mb-1">
+                          Límite: 50MB
+                        </span>
                       </label>
 
                       {!isClientView && (
