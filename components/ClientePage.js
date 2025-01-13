@@ -35,8 +35,8 @@ function ClientePage({ clientId, onBack, isClientView = false, token }) {
       try {
         console.log('Cargando documentos para cliente:', clientId);
         
-        // Si no es vista de cliente, verificar permisos
-        if (!isClientView) {
+        // Solo verificar sesión si no es vista de cliente y no hay token
+        if (!isClientView && !token) {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) {
             throw new Error('No hay sesión activa');
