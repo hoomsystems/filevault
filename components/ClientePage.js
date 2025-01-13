@@ -121,22 +121,23 @@ function ClientePage({ clientId, onBack, isClientView = false, token }) {
 
       console.log('Fetching client data with role:', userRole, 'clientId:', clientId);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No hay sesión activa');
-      }
+      // Solo verificar sesión si no es vista de cliente y no hay token
+      if (!isClientView && !token) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('No hay sesión activa');
+        }
 
-      // Verificar el rol del usuario
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .single();
+        // Verificar el rol del usuario
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
 
-      console.log('Role data from DB:', roleData);
-
-      if (!roleData || !['admin', 'colaborador'].includes(roleData.role)) {
-        throw new Error('No tienes permisos para ver estos datos');
+        if (!roleData || !['admin', 'colaborador'].includes(roleData.role)) {
+          throw new Error('No tienes permisos para ver estos datos');
+        }
       }
 
       // Obtener datos del cliente
@@ -146,12 +147,7 @@ function ClientePage({ clientId, onBack, isClientView = false, token }) {
         .eq('id', clientId)
         .single();
 
-      if (clientError) {
-        console.error('Error al obtener cliente:', clientError);
-        throw clientError;
-      }
-
-      console.log('Client data:', clientData);
+      if (clientError) throw clientError;
       setCliente(clientData);
 
       // Obtener documentos
@@ -161,16 +157,12 @@ function ClientePage({ clientId, onBack, isClientView = false, token }) {
         .eq('cliente_id', clientId)
         .order('orden');
 
-      if (docError) {
-        console.error('Error al obtener documentos:', docError);
-        throw docError;
-      }
-
-      console.log('Document list:', docList);
+      if (docError) throw docError;
       setDocumentList(docList || []);
+
     } catch (error) {
       console.error('Error detallado:', error);
-      alert('Error al cargar los datos del cliente: ' + error.message);
+      throw error;
     }
   };
 
@@ -316,7 +308,14 @@ function ClientePage({ clientId, onBack, isClientView = false, token }) {
         throw updateError;
       }
 
-      await fetchClientData();
+      // Actualizar solo el documento modificado en el estado
+      const newDocList = [...documentList];
+      newDocList[documentIndex] = {
+        ...document,
+        archivos: newArchivos
+      };
+      setDocumentList(newDocList);
+
       alert('Archivo subido exitosamente');
     } catch (error) {
       console.error('Error detallado:', error);
@@ -570,7 +569,14 @@ function ClientePage({ clientId, onBack, isClientView = false, token }) {
 
       if (updateError) throw updateError;
 
-      await fetchClientData();
+      // Actualizar solo el documento modificado en el estado
+      const newDocList = [...documentList];
+      newDocList[documentIndex] = {
+        ...document,
+        archivos: newArchivos
+      };
+      setDocumentList(newDocList);
+
       alert('Archivo eliminado exitosamente');
     } catch (error) {
       console.error('Error al eliminar archivo:', error);
